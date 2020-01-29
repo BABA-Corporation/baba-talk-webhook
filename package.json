@@ -1,0 +1,28 @@
+{
+  "name": "baba-talk-webhook",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Webhook pour l'assistant BABA Talk",
+  "main": "index.js",
+  "scripts": {
+    "start": "DEBUG=baba-talk-webhook node index.js",
+    "dev": "nodemon npm start",
+    "prod": "forever start .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "body-parser": "latest",
+    "cors": "^2.8.5",
+    "dialogflow-fulfillment": "^0.6.1",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "morgan": "~1.9.1",
+    "actions-on-google": "^2.12.0"
+  },
+  "devDependencies": {
+    "debug": "~2.6.9",
+    "nodemon": "^2.0.2"
+  },
+  "keywords": [],
+  "author": "BABA"
+}
