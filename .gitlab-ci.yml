@@ -1,6 +1,8 @@
-# This file is a template, and might need editing before it works on your project.
+stages:
+- build
+- deploy
+
 docker-build-master:
-  # Official docker image.
   image: docker:latest
   stage: build
   services:
@@ -14,7 +16,6 @@ docker-build-master:
     - master
 
 docker-build:
-  # Official docker image.
   image: docker:latest
   stage: build
   services:
@@ -26,3 +27,10 @@ docker-build:
     - docker push "$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG"
   except:
     - master
+    
+deploy-to-production:
+  stage: deploy
+  script: make deploy
+  environment:
+    name: production
+    url: https://talk-webhook.baba.click/
