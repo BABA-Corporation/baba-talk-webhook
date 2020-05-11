@@ -5,7 +5,9 @@
   "description": "Webhook pour l'assistant BABA Talk",
   "main": "index.js",
   "scripts": {
-    "start": "DEBUG=baba-talk-webhook node index.js",
+    "start": "node index.js",
+    "debug-win": "set DEBUG=baba-talk-webhook & node index.js",
+    "debug-linux": "DEBUG=baba-talk-webhook node index.js",
     "dev": "nodemon npm start",
     "prod": "forever start .",
     "test": "echo \"Error: no test specified\" && exit 1"
