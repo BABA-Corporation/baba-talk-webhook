@@ -18,8 +18,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: baba-talk-webhook
-  labels:
-    app: hello-world
 spec:
   replicas: 1
   selector:
@@ -32,7 +30,7 @@ spec:
     spec:
       containers:
         - name: baba-talk-webhook
-          image: maxsliw/baba-talk-webhook:1.0.0
+          image: registry.gitlab.com/baba-corporation/baba-talk-webhook:latest
           ports:
             - containerPort: 3001
           imagePullPolicy: Always
