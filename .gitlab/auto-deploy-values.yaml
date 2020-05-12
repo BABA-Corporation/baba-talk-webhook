@@ -19,7 +19,7 @@ kind: Deployment
 metadata:
   name: baba-talk-webhook
   labels:
-    app: hello-world
+    app: baba-talk-webhook
 spec:
   replicas: 1
   selector:
