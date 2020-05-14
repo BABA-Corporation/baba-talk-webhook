@@ -115,7 +115,6 @@ out
 gen
 baba-talk-webhook.tar
 patch-ingress-configmap.yml
-package-lock.json
 ingress-lb.yaml
 docker.sh
 echo.yaml

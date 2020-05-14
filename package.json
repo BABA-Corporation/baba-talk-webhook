@@ -1,12 +1,14 @@
 {
   "name": "baba-talk-webhook",
-  "version": "1.0.0",
+  "version": "1.6.1",
   "private": true,
   "description": "Webhook pour l'assistant BABA Talk",
   "main": "index.js",
   "scripts": {
-    "start": "DEBUG=baba-talk-webhook node index.js",
-    "dev": "nodemon npm start",
+    "start": "node index.js",
+    "debug-win": "set DEBUG=baba-talk-webhook & node index.js",
+    "debug-linux": "DEBUG=baba-talk-webhook node index.js",
+    "dev": "nodemon --exec npm start",
     "prod": "forever start .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -21,7 +23,7 @@
   },
   "devDependencies": {
     "debug": "~2.6.9",
-    "nodemon": "^2.0.2"
+    "nodemon": "^2.0.4"
   },
   "keywords": [],
   "author": "BABA"

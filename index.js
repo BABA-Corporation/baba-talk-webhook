@@ -5,6 +5,8 @@ const http = require('https');
 const logger = require('morgan');
 const debug = require('debug')('baba-talk-webhook');
 const {WebhookClient} = require('dialogflow-fulfillment');
+// TODO Affichage d'une carte textuelle avec les informations
+// const {Card, Suggestion} = require('dialogflow-fulfillment');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 // const {dialogflow} = require('actions-on-google');
@@ -16,16 +18,16 @@ require('dotenv').config();
  */
 
 function normalizePort(val) {
-    let port = parseInt(val, 10);
+    let tmpPort = parseInt(val, 10);
 
-    if (isNaN(port)) {
+    if (isNaN(tmpPort)) {
         // named pipe
         return val;
     }
 
-    if (port >= 0) {
+    if (tmpPort >= 0) {
         // port number
-        return port;
+        return tmpPort;
     }
 
     return false;
@@ -54,25 +56,6 @@ server.get('/', (req, res) => {
     res.status(200).send('BABA TALK Webhook is working.')
 });
 
-function getNasaData(reqUrl) {
-    return http.get(
-        reqUrl,
-        responseFromAPI => {
-            let completeResponse = '';
-            responseFromAPI.on('data', chunk => {
-                completeResponse += chunk
-            });
-            responseFromAPI.on('end', () => {
-                const nasa = JSON.parse(completeResponse);
-                return `The planet : ${nasa.title}`;
-            });
-        },
-        error => {
-            return 'Désolé, impossible de joindre l\'API de la NASA';
-        }
-    );
-}
-
 function test(agent) {
     const possibleResponse = [
         'Toute la data que tu veux frèroo !',
@@ -80,17 +63,17 @@ function test(agent) {
         'Pas de soucis le sang de la veine'
     ];
     const reqUrl = encodeURI(
-        `https://api.nasa.gov/planetary/apod?api_key=${process.env.API_KEY}`
+        `https://jsonplaceholder.typicode.com/todos/1`
     );
     /**const nasaToSearch =
-        req.body.result && req.body.result.parameters && req.body.result.parameters.nasa
-            ? req.body.result.parameters.nasa
-            : '';**/
-
+     req.body.result && req.body.result.parameters && req.body.result.parameters.nasa
+     ? req.body.result.parameters.nasa
+     : '';**/
     let pick = Math.floor(Math.random() * possibleResponse.length);
 
     let response = possibleResponse[pick];
-    //agent.add(response);
+    agent.add(response);
+
     return new Promise((resolve, reject) => {
         http.get(
             reqUrl,
@@ -100,13 +83,17 @@ function test(agent) {
                     completeResponse += chunk
                 });
                 responseFromAPI.on('end', () => {
-                    const nasa = JSON.parse(completeResponse);
-                    let output = agent.add(`The planet : ${nasa.title}`);
+                    const parseData = JSON.parse(completeResponse);
+                    debug(parseData);
+                    let outputMsg = 'Voici le message que j\'obtient depuis une API externe : ';
+                    outputMsg += parseData.title;
+                    let output = agent.add(outputMsg);
                     resolve(output);
                 });
             },
             error => {
-                let output = 'Désolé, impossible de joindre l\'API de la NASA';
+                let output = 'Désolé, impossible de joindre l\'API';
+                resolve(output);
             }
         );
     });
@@ -128,7 +115,6 @@ server.post('/', function (req, res) {
     debug(`\n\n>>>>>>> S E R V E R   H I T <<<<<<<`);
     WebhookProcessing(req, res);
 });
-// app.post('/', assistant);
 
 
 server.listen(server.get('port'), () => {
