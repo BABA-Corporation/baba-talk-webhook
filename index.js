@@ -5,7 +5,8 @@ const http = require('https');
 const logger = require('morgan');
 const debug = require('debug')('baba-talk-webhook');
 const {WebhookClient} = require('dialogflow-fulfillment');
-const {Card, Suggestion} = require('dialogflow-fulfillment');
+// TODO Affichage d'une carte textuelle avec les informations
+// const {Card, Suggestion} = require('dialogflow-fulfillment');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 // const {dialogflow} = require('actions-on-google');
@@ -61,9 +62,6 @@ function test(agent) {
         'Je te sors toutes les infos mec',
         'Pas de soucis le sang de la veine'
     ];
-    /** const reqUrl = encodeURI(
-     `https://api.nasa.gov/planetary/apod?api_key=${process.env.API_KEY}`
-     ); **/
     const reqUrl = encodeURI(
         `https://jsonplaceholder.typicode.com/todos/1`
     );
@@ -75,6 +73,7 @@ function test(agent) {
 
     let response = possibleResponse[pick];
     agent.add(response);
+
     return new Promise((resolve, reject) => {
         http.get(
             reqUrl,
@@ -93,7 +92,7 @@ function test(agent) {
                 });
             },
             error => {
-                let output = 'Désolé, impossible de joindre l\'API de la NASA';
+                let output = 'Désolé, impossible de joindre l\'API';
                 resolve(output);
             }
         );
