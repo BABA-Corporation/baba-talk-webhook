@@ -118,5 +118,6 @@ server.post('/', function (req, res) {
 
 
 server.listen(server.get('port'), () => {
-    debug('Webhook is running at port ' + server.get('port'))
+    debug('Webhook is running at port ' + server.get('port'));
+    console.log(server.get('port'));
 });
