@@ -1,7 +1,7 @@
 'use strict';
 
 const express = require('express');
-const http = require('https');
+const axios = require('axios');
 const logger = require('morgan');
 const debug = require('debug')('baba-talk-webhook');
 const {WebhookClient} = require('dialogflow-fulfillment');
@@ -10,6 +10,7 @@ const {WebhookClient} = require('dialogflow-fulfillment');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 // const {dialogflow} = require('actions-on-google');
+const api = require('./ApiService');
 
 require('dotenv').config();
 
@@ -43,8 +44,10 @@ server.set('port', port);
 
 if (process.env.NODE_ENV !== 'development') {
     server.use(logger('combined'));
+    server.set('api', `https://api.talk.baba.click`);
 } else {
     server.use(logger('dev'));
+    server.set('api', `http://localhost:5001`);
 }
 
 server.use(express.json());
@@ -56,46 +59,49 @@ server.get('/', (req, res) => {
     res.status(200).send('BABA TALK Webhook is working.')
 });
 
-function test(agent) {
+async function getArticle(agent) {
     const possibleResponse = [
         'Toute la data que tu veux frèroo !',
         'Je te sors toutes les infos mec',
         'Pas de soucis le sang de la veine'
     ];
-    const reqUrl = encodeURI(
-        `https://jsonplaceholder.typicode.com/todos/1`
-    );
-    /**const nasaToSearch =
+
+    /*const ToSearch =
      req.body.result && req.body.result.parameters && req.body.result.parameters.nasa
      ? req.body.result.parameters.nasa
-     : '';**/
+     : '';*/
+
     let pick = Math.floor(Math.random() * possibleResponse.length);
 
     let response = possibleResponse[pick];
     agent.add(response);
 
+    const apiUrl = server.get('api');
+    const user = await api.getUserByMail("jean-mich@baba.click", "P@ssword1!", apiUrl);
+
     return new Promise((resolve, reject) => {
-        http.get(
-            reqUrl,
-            responseFromAPI => {
-                let completeResponse = '';
-                responseFromAPI.on('data', chunk => {
-                    completeResponse += chunk
-                });
-                responseFromAPI.on('end', () => {
-                    const parseData = JSON.parse(completeResponse);
-                    debug(parseData);
-                    let outputMsg = 'Voici le message que j\'obtient depuis une API externe : ';
-                    outputMsg += parseData.title;
-                    let output = agent.add(outputMsg);
-                    resolve(output);
-                });
-            },
-            error => {
-                let output = 'Désolé, impossible de joindre l\'API';
-                resolve(output);
+        axios.get(apiUrl + "/api/private/user/" + user.userId + '/articles', {
+            headers: {
+                Authorization: `Bearer ${user.token}`
             }
-        );
+        })
+        .then(function (res) {
+            const parseData = res.data;
+            const articles = parseData[0]['Bitcoins,Apple,Android'];
+            const article = articles[0];
+            let outputMsg = 'Voici un article de jean mich : ';
+            outputMsg += article.title;
+            let output = agent.add(outputMsg);
+            resolve(output);
+        })
+        .catch(function (error) {
+            console.log(error);
+            let output = 'Désolé, impossible de joindre l\'API';
+            resolve(output);
+        })
+        .then(function () {
+            // always executed
+        });
     });
 }
 
@@ -106,7 +112,7 @@ function WebhookProcessing(req, res) {
     debug('Dialogflow Request body: ' + JSON.stringify(req.body));
 
     let intentMap = new Map();
-    intentMap.set('test', test);
+    intentMap.set('test', getArticle);
 
     agent.handleRequest(intentMap).then(r => console.log(intentMap.size));
 }
