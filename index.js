@@ -11,7 +11,6 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const {dialogflow, SignIn} = require('actions-on-google');
 const api = require('./ApiService');
-const askForSignIn = require('./AuthService');
 
 require('dotenv').config();
 
