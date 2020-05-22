@@ -1,3 +1,11 @@
+# curl -X POST -H 'Content-Type: application/json' -d '{"responseId":"10cbfa60-321e-4dce-a75e-be42107580ca-0f0e27e1","queryResult":{"queryText":"Connexion","parameters":{},"allRequiredParamsPresent":true,"fulfillmentMessages":[{"text":{"text":[""]}}],"outputContexts":[{"name":"projects/baba-talk/agent/sessions/5129d754-1460-452b-459f-4a6f1af4d59d/contexts/__system_counters__","parameters":{"no-input":0,"no-match":0}}],"intent":{"name":"projects/baba-talk/agent/intents/1db5c5f1-d808-46ab-8393-466662319f78","displayName":"Start Signin"},"intentDetectionConfidence":1,"languageCode":"fr"},"originalDetectIntentRequest":{"payload":{}},"session":"projects/baba-talk/agent/sessions/5129d754-1460-452b-459f-4a6f1af4d59d"}' https://webhook.talk.baba.click/
+POST http://localhost:5002/fulfillment
+Content-Type: application/json
+
+{"responseId":"10cbfa60-321e-4dce-a75e-be42107580ca-0f0e27e1","queryResult":{"queryText":"Connexion","parameters":{},"allRequiredParamsPresent":true,"fulfillmentMessages":[{"text":{"text":[""]}}],"outputContexts":[{"name":"projects/baba-talk/agent/sessions/5129d754-1460-452b-459f-4a6f1af4d59d/contexts/__system_counters__","parameters":{"no-input":0,"no-match":0}}],"intent":{"name":"projects/baba-talk/agent/intents/1db5c5f1-d808-46ab-8393-466662319f78","displayName":"Start Signin"},"intentDetectionConfidence":1,"languageCode":"fr"},"originalDetectIntentRequest":{"payload":{}},"session":"projects/baba-talk/agent/sessions/5129d754-1460-452b-459f-4a6f1af4d59d"}
+
+###
+
 # curl -X POST -H 'Accept: text/html' -H 'Content-Type: application/json' -d '{"responseId":"e3b4d7a4-f79c-4ebf-83ee-6303c5e43046-e15c53b8","queryResult":{"queryText":"lance le poc","parameters":{},"allRequiredParamsPresent":true,"fulfillmentMessages":[{"text":{"text":[""]}}],"outputContexts":[{"name":"projects/baba-talk/agent/sessions/2b1e53dc-4955-cee0-ad6c-8726e4dd6a26/contexts/__system_counters__","parameters":{"no-input":0,"no-match":0}}],"intent":{"name":"projects/baba-talk/agent/intents/a96d883d-dfb1-4f84-94c2-828d0c497bf5","displayName":"test"},"intentDetectionConfidence":1,"languageCode":"fr"},"originalDetectIntentRequest":{"payload":{}},"session":"projects/baba-talk/agent/sessions/2b1e53dc-4955-cee0-ad6c-8726e4dd6a26"}' https://webhook.talk.baba.click/
 POST http://localhost:5002/
 Accept: text/html
