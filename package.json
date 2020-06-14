@@ -1,6 +1,6 @@
 {
   "name": "baba-talk-webhook",
-  "version": "1.7.2",
+  "version": "1.9.7",
   "private": false,
   "description": "Webhook pour l'assistant BABA Talk",
   "main": "index.js",

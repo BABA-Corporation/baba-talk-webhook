@@ -1,15 +1,11 @@
 'use strict';
 
 const express = require('express');
-const axios = require('axios');
 const logger = require('morgan');
 const debug = require('debug')('baba-talk-webhook');
-const {WebhookClient} = require('dialogflow-fulfillment');
-// TODO Affichage d'une carte textuelle avec les informations
-// const {Card, Suggestion} = require('dialogflow-fulfillment');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const {dialogflow, SignIn} = require('actions-on-google');
+const {dialogflow, SimpleResponse, SignIn, Suggestions, LinkOutSuggestion} = require('actions-on-google');
 const api = require('./ApiService');
 
 require('dotenv').config();
@@ -17,7 +13,6 @@ require('dotenv').config();
 /**
  * Normalize a port into a number, string, or false.
  */
-
 function normalizePort(val) {
     let tmpPort = parseInt(val, 10);
 
@@ -39,21 +34,18 @@ const port = normalizePort(process.env.PORT || 5002);
 const server = express();
 const assistant = dialogflow({
     clientId: process.env.CLIENT_ID,
-    debug: true,
+    debug: false,
 });
-
-
-process.env.DEBUG = 'dialogflow:debug';
 server.set('port', port);
 
 if (process.env.NODE_ENV !== 'development') {
     server.use(logger('combined'));
-    server.set('api', `https://api.talk.baba.click`);
 } else {
     server.use(logger('dev'));
-    server.set('api', `http://localhost:5001`);
 }
-
+if (process.env.DEBUG) {
+    assistant.debug = true;
+}
 server.use(express.json());
 server.use(express.urlencoded({extended: true}));
 server.use(bodyParser.json({type: 'application/json'}));
@@ -63,126 +55,123 @@ server.get('/', (req, res) => {
     res.status(200).send('BABA TALK Webhook is working.')
 });
 
-async function test(agent) {
-    const possibleResponse = [
-        'Toute la data que tu veux frèroo !',
-        'Je te sors toutes les infos mec',
-        'Pas de soucis le sang de la veine'
-    ];
+const customResponses = [
+    'Toute la data que tu veux',
+    'Je te sors toutes les infos',
+    'Pas de soucis',
+    'Je te sors les articles'
+];
+const randomResponse = function (name) {
+    let pick = Math.floor(Math.random() * customResponses.length);
+    return customResponses[pick] + " " + name;
+}
 
-    /*const ToSearch =
-     req.body.result && req.body.result.parameters && req.body.result.parameters.nasa
-     ? req.body.result.parameters.nasa
-     : '';*/
-
-    let pick = Math.floor(Math.random() * possibleResponse.length);
-
-    let response = possibleResponse[pick];
-    agent.add(response);
-
-    const apiUrl = server.get('api');
-    const user = await api.getUserByMail("jean-mich@baba.click", "P@ssword1!", apiUrl);
-
-    return new Promise((resolve) => {
-        axios.get(apiUrl + "/api/private/user/" + user.userId + '/articles', {
-            headers: {
-                Authorization: `Bearer ${user.token}`
+const getArticles = async function (userId, userToken, theme) {
+    const data = await api.getArticlesByUser(userId, userToken);
+    if (theme) {
+        const themeMaj = theme.toUpperCase();
+        for (let topics = 0; topics < data.length; topics++) {
+            if (data[topics][themeMaj]) {
+                return data[topics][themeMaj];
             }
-        })
-            .then(function (res) {
-                const parseData = res.data;
-                const articles = parseData[0]['Bitcoins,Apple,Android'];
-                const article = articles[0];
-                let outputMsg = 'Voici un article de jean mich : ';
-                outputMsg += article.title;
-                let output = agent.add(outputMsg);
-                resolve(output);
-            })
-            .catch(function (error) {
-                console.log(error);
-                let output = 'Désolé, impossible de joindre l\'API';
-                resolve(output);
-            })
-            .then(function () {
-                // always executed
-            });
-    });
-}
-
-async function getVeille(agent) {
-    const possibleResponse = [
-        'Toute la data que tu veux frèroo !',
-        'Je te sors toutes les infos mec',
-        'Pas de soucis le sang de la veine'
-    ];
-
-    let pick = Math.floor(Math.random() * possibleResponse.length);
-
-    let response = possibleResponse[pick];
-    agent.add(response);
-
-    const apiUrl = server.get('api');
-    const user = await api.getUserByMail("jean-mich@baba.click", "P@ssword1!", apiUrl);
-
-    return new Promise((resolve) => {
-        axios.get(apiUrl + "/api/private/user/" + user.userId + '/articles', {
-            headers: {
-                Authorization: `Bearer ${user.token}`
-            }
-        })
-            .then(function (res) {
-                const parseData = res.data;
-                const articles = parseData[0]['Bitcoins,Apple,Android'];
-                const article = articles[0];
-                let outputMsg = 'Voici un article de jean mich : ';
-                outputMsg += article.title;
-                let output = agent.add(outputMsg);
-                resolve(output);
-            })
-            .catch(function (error) {
-                console.log(error);
-                let output = 'Désolé, impossible de joindre l\'API';
-                resolve(output);
-            })
-            .then(function () {
-                // always executed
-            });
-    });
-}
-
-function WebhookProcessing(req, res) {
-    const agent = new WebhookClient({request: req, response: res});
-    debug(`agent set`);
-    debug('Dialogflow Request headers: ' + JSON.stringify(req.headers));
-    debug('Dialogflow Request body: ' + JSON.stringify(req.body));
-
-    let intentMap = new Map();
-    intentMap.set('test', test);
-    intentMap.set('Veille', getVeille);
-
-    agent.handleRequest(intentMap).then(r => console.log(intentMap.size));
-}
-
-server.post('/', function (req, res) {
-    debug(`\n\n>>>>>>> S E R V E R   H I T <<<<<<<`);
-    WebhookProcessing(req, res);
-});
+        }
+        return null;
+    } else {
+        return data[0][Object.keys(data[0])[0]];
+    }
+};
 
 assistant.intent('Start Signin', (conv) => {
-    conv.ask(new SignIn('To get your account details'));
+    conv.ask(new SignIn('Pour obtenir les informations privées sur votre vie'));
 });
-// Create a Dialogflow intent with the `actions_intent_SIGN_IN` event.
-assistant.intent('Get Signin', (conv, params, signin) => {
+assistant.intent('Get Signin', async (conv, params, signin) => {
     if (signin.status === 'OK') {
         const payload = conv.user.profile.payload;
-        conv.ask(`I got your account details, ${payload.name}. What do you want to do next?`);
+        conv.ask(`J'ai tous les détails de votre compte, ${payload.name}. Demande moi un truc mane !`);
     } else {
-        conv.ask(`I won't be able to save your data, but what do you want to do next?`);
+        conv.ask(`Je ne pourrai pas sauvegarder vos données, mais que voulez-vous faire ?`);
     }
 });
+
+assistant.middleware(async (conv) => {
+    const {email} = conv.user;
+    if (!conv.data.uid && email) {
+        const user = await api.getUserByMail(email);
+        if (user.userId && user.token) {
+            conv.data.uid = user.userId;
+            conv.data.token = user.token;
+            debug("User connect : " + email);
+        } else {
+            conv.ask(new SimpleResponse({
+                speech: `Je te trouve pas ! Tu es sur d'etre inscris sur notre appli ? Tu peux t'inscrire à l'adresse talk point baba point click`,
+                text: `Je te trouve pas ! Tu es sur d'etre inscris sur notre appli ?`,
+            }));
+            return conv.close(new LinkOutSuggestion({
+                name: 'talk.baba.click',
+                url: 'https://talk.baba.click/',
+            }));
+        }
+    } else if (!email) {
+        conv.ask("Tu n'es pas connecté mais voici quand meme un petit article comme je suis sympatoche");
+        conv.ask("Il était une fois un article");
+        return conv.ask(new Suggestions('Connecte moi !', 'Rentre chez toi'));
+    }
+});
+
+const veille = async function (conv, theme, next) {
+    if (conv.data.uid) {
+
+        if (!next) {
+            const {payload} = conv.user.profile;
+            const name = payload ? `${payload.given_name}` : '';
+            conv.data.articleNumber = 0;
+            conv.ask(randomResponse(name));
+            conv.data.articles = await getArticles(conv.data.uid, conv.data.token, theme);
+        }
+
+        const articles = conv.data.articles;
+
+        if (articles) {
+            const article = articles[conv.data.articleNumber];
+            if (article) {
+                conv.ask(`${article.title}`);
+                conv.data.articleNumber++;
+            } else {
+                conv.ask(`OOOOH NON ! Je ne trouve pas d'article`);
+                conv.data.articleNumber = 0;
+            }
+            //TODO Affichage d'une carte textuelle avec les informations
+            return conv.ask(new Suggestions('Next', 'Stop'));
+        }
+        return conv.ask(`Mince ! Impossible d'obtenir les articles`);
+    }
+};
+
+const veilleDetails = async function (conv) {
+    if (conv.data.articleNumber) {
+        const articles = conv.data.articles;
+
+        if (articles) {
+            const article = articles[conv.data.articleNumber];
+            if (article) {
+                conv.ask(`${article.description}`);
+            } else {
+                conv.ask(`Impossible d'obtenir la description de cet article`);
+            }
+            //TODO Affichage d'une carte textuelle avec les informations
+            return conv.ask(new Suggestions('Next', 'Stop'));
+        }
+        return conv.ask(`Mince ! Impossible d'obtenir l'articles`);
+    }
+};
+
+assistant.intent('Veille', conv => veille(conv, null, false));
+assistant.intent('Veille Encore', conv => veille(conv, null, true));
+assistant.intent('Veille par thème', (conv, params) => veille(conv, params.theme, false));
+assistant.intent('Veille details', (conv) => veilleDetails(conv));
 
 server.post('/fulfillment', assistant);
 
 server.listen(server.get('port'), () => {
-    debug('Webhook is running at port ' + server.get('port') + ' with ' + process.env.NODE_ENV + ' env')
+    debug('Webhook is running at port ' + server.get('port') + ' with ' + process.env.NODE_ENV + ' env');
 });
